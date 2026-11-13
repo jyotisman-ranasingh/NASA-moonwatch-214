@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useState, useEffect, useCallback } from 'react';
 
 // --- CUSTOM HOOKS ---
@@ -42,19 +40,17 @@ const LunarViewport = ({ sol, level, solarExtended, shieldActive, activeAlert, o
       STATUS: {shieldActive ? 'SHIELD UP' : 'SHIELD DOWN'} | {solarExtended ? 'SOLAR EXTENDED' : 'SOLAR RETRACTED'}
     </div>
     
-    {/* Character Representation */}
     <div style={{
       position: 'absolute', bottom: '20px', left: `${characterPos}px`, 
       width: '20px', height: '40px', backgroundColor: '#fbbf24', 
       transition: 'left 0.5s ease-in-out', borderRadius: '4px'
     }} />
 
-    {/* Alert Modal */}
     {activeAlert && (
       <div style={{
         position: 'absolute', top: '0', left: '0', right: '0', bottom: '0', 
         backgroundColor: 'rgba(220, 38, 38, 0.9)', color: 'white', 
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: '20px'
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px'
       }}>
         <h2 style={{ margin: '0 0 10px 0' }}>{activeAlert.title}</h2>
         <p style={{ textAlign: 'center', maxWidth: '80%' }}>{activeAlert.message}</p>
@@ -107,36 +103,24 @@ const ControlDeck = ({ power, integrity, oxygenStore, level, solarExtended, shie
 const OXYGEN_MODES = ['LOW', 'NORMAL', 'HIGH'];
 
 export default function App() {
-  // Mission Progression State
   const [sol, setSol] = useState(1);
   const [level, setLevel] = useState(1);
   const [timeLeft, setTimeLeft] = useState(15);
-
-  // Subsystem States
   const [solarExtended, setSolarExtended] = useState(true);
   const [shieldActive, setShieldActive] = useState(false);
   const [oxygenLevel, setOxygenLevel] = useState('NORMAL');
   const [greenhouseActive, setGreenhouseActive] = useState(false);
   const [commsQueued, setCommsQueued] = useState(false);
-
-  // Resource Gauges
   const [power, setPower] = useState(85);
   const [integrity, setIntegrity] = useState(95);
   const [oxygenStore, setOxygenStore] = useState(80);
-
-  // Character X-position inside viewport
   const [characterPos, setCharacterPos] = useState(395);
-
-  // Space-Weather Modal & Event Log
   const [activeAlert, setActiveAlert] = useState(null);
   const [eventLog, setEventLog] = useState('Welcome to Lunar Outpost 214. Use hotkeys 1–5 to manage base systems.');
-
-  // Accessibility & Graphics Settings
   const [reducedMotion, setReducedMotion] = useState(false);
   const [graphicsPreset, setGraphicsPreset] = useState('HIGH');
   const fps = useFpsMonitor(graphicsPreset, setGraphicsPreset, true);
 
-  // Action Handlers
   const toggleSolar = useCallback(() => {
     setCharacterPos(130);
     setSolarExtended((prev) => {
@@ -193,12 +177,9 @@ export default function App() {
   const advanceSol = useCallback(() => {
     setSol((prevSol) => {
       const nextSol = Math.min(214, prevSol + 1);
-
-      // Unlock progressive clearance levels
       if (nextSol >= 6) setLevel(3);
       else if (nextSol >= 3) setLevel(2);
 
-      // Calculate resource shifts per Sol
       const powerDelta = (solarExtended ? 12 : -8) - (shieldActive ? 10 : 0) - (commsQueued ? 5 : 0);
       const o2Delta = oxygenLevel === 'HIGH' ? -10 : oxygenLevel === 'NORMAL' ? -4 : 3;
       const greenBonus = greenhouseActive ? 6 : 0;
@@ -206,15 +187,12 @@ export default function App() {
       setPower((p) => Math.max(0, Math.min(100, p + powerDelta)));
       setOxygenStore((o) => Math.max(0, Math.min(100, o + o2Delta + greenBonus)));
 
-      // Trigger Space-Weather Alert every 4th Sol
       if (nextSol % 4 === 0) {
         setActiveAlert({
           title: 'SOLAR FLARE CLASS M4.2',
           message: 'Coronal mass ejection detected! Retract extended solar panels or engage the Shield Dome to prevent hull & array damage.',
         });
-        if (!shieldActive) {
-          setIntegrity((i) => Math.max(0, i - 15));
-        }
+        if (!shieldActive) setIntegrity((i) => Math.max(0, i - 15));
       }
 
       setEventLog(`Advanced to Sol ${nextSol}. Clearance Level ${nextSol >= 6 ? 3 : nextSol >= 3 ? 2 : 1}.`);
@@ -223,28 +201,20 @@ export default function App() {
     setTimeLeft(15);
   }, [solarExtended, shieldActive, commsQueued, oxygenLevel, greenhouseActive]);
 
-  // Sol 214 Countdown Timer
   useEffect(() => {
     if (reducedMotion || activeAlert) return;
-
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 1) {
-          advanceSol();
-          return 15;
-        }
+        if (prev <= 1) { advanceSol(); return 15; }
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(timer);
   }, [reducedMotion, activeAlert, advanceSol]);
 
-  // Global Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
-
       const key = e.key.toLowerCase();
 
       if (key === 'escape') {
@@ -255,7 +225,6 @@ export default function App() {
         }
         return;
       }
-
       if (key === '1' || key === 'p') { e.preventDefault(); toggleSolar(); }
       else if (key === '2' || key === 's') { e.preventDefault(); toggleShield(); }
       else if (key === '3' || key === 'o') { e.preventDefault(); cycleOxygen(); }
@@ -263,7 +232,6 @@ export default function App() {
       else if (key === '5' || key === 'c') { e.preventDefault(); toggleComms(); }
       else if (e.code === 'Space' || key === 'enter') { e.preventDefault(); advanceSol(); }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeAlert, toggleSolar, toggleShield, cycleOxygen, toggleGreenhouse, toggleComms, advanceSol]);
@@ -280,45 +248,8 @@ export default function App() {
           </span>
         </header>
 
-        <LunarViewport
-          sol={sol}
-          level={level}
-          solarExtended={solarExtended}
-          shieldActive={shieldActive}
-          oxygenLevel={oxygenLevel}
-          greenhouseActive={greenhouseActive}
-          commsQueued={commsQueued}
-          activeAlert={activeAlert}
-          onDismissAlert={() => setActiveAlert(null)}
-          reducedMotion={reducedMotion}
-          graphicsPreset={graphicsPreset}
-          characterPos={characterPos}
-        />
-
-        <ControlDeck
-          power={power}
-          integrity={integrity}
-          oxygenStore={oxygenStore}
-          level={level}
-          solarExtended={solarExtended}
-          shieldActive={shieldActive}
-          oxygenLevel={oxygenLevel}
-          greenhouseActive={greenhouseActive}
-          commsQueued={commsQueued}
-          onToggleSolar={toggleSolar}
-          onToggleShield={toggleShield}
-          onCycleOxygen={cycleOxygen}
-          onToggleGreenhouse={toggleGreenhouse}
-          onToggleComms={toggleComms}
-          onNextSol={advanceSol}
-          reducedMotion={reducedMotion}
-          setReducedMotion={setReducedMotion}
-          graphicsPreset={graphicsPreset}
-          setGraphicsPreset={setGraphicsPreset}
-          fps={fps}
-          timerPaused={reducedMotion || Boolean(activeAlert)}
-          timeLeft={timeLeft}
-        />
+        <LunarViewport sol={sol} level={level} solarExtended={solarExtended} shieldActive={shieldActive} oxygenLevel={oxygenLevel} greenhouseActive={greenhouseActive} commsQueued={commsQueued} activeAlert={activeAlert} onDismissAlert={() => setActiveAlert(null)} reducedMotion={reducedMotion} graphicsPreset={graphicsPreset} characterPos={characterPos} />
+        <ControlDeck power={power} integrity={integrity} oxygenStore={oxygenStore} level={level} solarExtended={solarExtended} shieldActive={shieldActive} oxygenLevel={oxygenLevel} greenhouseActive={greenhouseActive} commsQueued={commsQueued} onToggleSolar={toggleSolar} onToggleShield={toggleShield} onCycleOxygen={cycleOxygen} onToggleGreenhouse={toggleGreenhouse} onToggleComms={toggleComms} onNextSol={advanceSol} reducedMotion={reducedMotion} setReducedMotion={setReducedMotion} graphicsPreset={graphicsPreset} setGraphicsPreset={setGraphicsPreset} fps={fps} timerPaused={reducedMotion || Boolean(activeAlert)} timeLeft={timeLeft} />
       </div>
     </div>
   );
