@@ -4,7 +4,7 @@ import './ui/missionDeck.css';
 import Parallax2D from './scene/Parallax2D';
 import SpriteActor from './scene/SpriteActor';
 import MissionHUD from './ui/MissionHUD';
-import WelcomeScreen from './ui/WelcomeScreen';
+import WelcomeScreen from './ui/WelcomeScreen.jsx';
 import useFpsMonitor from './engine/useFpsMonitor';
 
 const O2_CYCLE = ['LOW', 'NORMAL', 'HIGH'];
