@@ -3,6 +3,7 @@ import soundManager from './audio/soundManager.js';
 import { loadSpaceWeatherEvents } from './data/donkiClient.js';
 import { saveRunResult } from './data/supabaseClient.js';
 import Diorama from './scene/Diorama.jsx';
+import LunarViewport from './components/LunarViewport.jsx';
 import useGameStore from './store/useGameStore.js';
 import BriefingScreen from './ui/screens/BriefingScreen.jsx';
 import DebriefScreen from './ui/screens/DebriefScreen.jsx';
@@ -14,7 +15,7 @@ import './ui/styles.css';
 
 const OXYGEN_LEVEL_ORDER = ['low', 'normal', 'high'];
 
-export default function App({ SceneComponent = Diorama }) {
+export default function App({ SceneComponent = LunarViewport }) {
   const screen = useGameStore((s) => s.ui?.screen) || 'title';
   const status = useGameStore((s) => s.game?.status) || 'playing';
   const level = useGameStore((s) => s.game?.level) || 1;

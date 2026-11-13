@@ -1,19 +1,27 @@
 import React from 'react';
+import useGameStore from '../store/useGameStore.js';
 
-export default function LunarViewport({
-  sol,
-  level,
-  solarExtended,
-  shieldActive,
-  oxygenLevel,
-  greenhouseActive,
-  commsQueued,
-  activeAlert,
-  onDismissAlert,
-  reducedMotion,
-  graphicsPreset,
-  characterPos,
-}) {
+export default function LunarViewport(props) {
+  const storeGame = useGameStore((s) => s.game);
+  const storeUi = useGameStore((s) => s.ui);
+  const storeSettings = useGameStore((s) => s.settings);
+  const dismissAlert = useGameStore((s) => s.dismissAlert);
+
+  const sol = props.sol ?? storeGame?.sol ?? 1;
+  const level = props.level ?? storeGame?.level ?? 1;
+  const solarExtended = props.solarExtended ?? storeGame?.choices?.panelsOut ?? true;
+  const shieldActive = props.shieldActive ?? storeGame?.choices?.shieldOn ?? false;
+  const oxygenLevel = (props.oxygenLevel ?? storeGame?.choices?.oxygenLevel ?? 'NORMAL').toUpperCase();
+  const greenhouseActive = props.greenhouseActive ?? (storeGame?.choices?.tendGreenhouse || storeGame?.choices?.waterGreenhouse) ?? false;
+  const commsQueued = props.commsQueued ?? storeGame?.choices?.queueComms ?? false;
+  const activeAlert = props.activeAlert !== undefined ? props.activeAlert : (storeUi?.activeAlert ? {
+    title: storeUi.activeAlert.headline || storeUi.activeAlert.type || 'SOLAR EVENT',
+    message: storeUi.activeAlert.description || storeUi.activeAlert.summary || 'A space weather event has been detected.',
+  } : null);
+  const onDismissAlert = props.onDismissAlert ?? dismissAlert;
+  const reducedMotion = props.reducedMotion ?? storeSettings?.reducedMotion ?? false;
+  const graphicsPreset = (props.graphicsPreset ?? storeSettings?.quality ?? 'HIGH').toUpperCase();
+  const characterPos = props.characterPos ?? 380;
   const isHigh = graphicsPreset === 'HIGH';
   const isMedium = graphicsPreset === 'MEDIUM' || isHigh;
 
