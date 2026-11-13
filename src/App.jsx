@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './ui/missionDeck.css';
 import Parallax2D from './scene/Parallax2D';
 import SpriteActor from './scene/SpriteActor';
-import MissionHUD from './ui/MissionHUD';
+import MissionHUD from './ui/MissionHUD.jsx';
 import WelcomeScreen from './ui/WelcomeScreen.jsx';
 import useFpsMonitor from './engine/useFpsMonitor';
 
