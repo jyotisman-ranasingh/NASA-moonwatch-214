@@ -1,46 +1,41 @@
-import { useEffect, useRef, useState } from 'react';
+// src/engine/useFpsMonitor.js
+import { useState, useEffect, useRef } from 'react';
 
-const PRESET_ORDER = ['HIGH', 'MEDIUM', 'LOW'];
-
-export function useFpsMonitor(graphicsPreset, setGraphicsPreset, autoDowngrade = true) {
+export default function useFpsMonitor(graphicsPreset, setGraphicsPreset) {
   const [fps, setFps] = useState(60);
-  const frameCount = useRef(0);
-  const lastTime = useRef(performance.now());
   const lowFpsStreak = useRef(0);
 
   useEffect(() => {
-    let animationFrameId;
+    let frameCount = 0;
+    let lastTime = performance.now();
+    let rafId;
 
-    const tick = (now) => {
-      frameCount.current += 1;
-      const elapsed = now - lastTime.current;
-
-      if (elapsed >= 1000) {
-        const currentFps = Math.round((frameCount.current * 1000) / elapsed);
+    const measure = (now) => {
+      frameCount++;
+      if (now - lastTime >= 1000) {
+        const currentFps = Math.round((frameCount * 1000) / (now - lastTime));
         setFps(currentFps);
-        frameCount.current = 0;
-        lastTime.current = now;
 
-        if (autoDowngrade && currentFps < 30) {
+        if (currentFps < 30) {
           lowFpsStreak.current += 1;
-          if (lowFpsStreak.current >= 3) {
-            setGraphicsPreset((prev) => {
-              const idx = PRESET_ORDER.indexOf(prev);
-              return idx < PRESET_ORDER.length - 1 ? PRESET_ORDER[idx + 1] : prev;
-            });
+          if (lowFpsStreak.current >= 2) {
+            if (graphicsPreset === 'HIGH') setGraphicsPreset('MEDIUM');
+            else if (graphicsPreset === 'MEDIUM') setGraphicsPreset('LOW');
             lowFpsStreak.current = 0;
           }
         } else {
           lowFpsStreak.current = 0;
         }
-      }
 
-      animationFrameId = requestAnimationFrame(tick);
+        frameCount = 0;
+        lastTime = now;
+      }
+      rafId = requestAnimationFrame(measure);
     };
 
-    animationFrameId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [autoDowngrade, setGraphicsPreset]);
+    rafId = requestAnimationFrame(measure);
+    return () => cancelAnimationFrame(rafId);
+  }, [graphicsPreset, setGraphicsPreset]);
 
   return fps;
 }
