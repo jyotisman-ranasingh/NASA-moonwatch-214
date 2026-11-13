@@ -1,0 +1,105 @@
+/* src/ui/missionDeck.css */
+:root {
+  --bg-panel: rgba(13, 22, 43, 0.88);
+  --border-glow: #38bdf8;
+  --accent-amber: #fbbf24;
+  --accent-green: #34d399;
+  --accent-danger: #f87171;
+  --text-main: #f8fafc;
+  --font-display: 'Fredoka', 'Segoe UI', system-ui, sans-serif;
+}
+
+.mission-root {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  font-family: var(--font-display);
+  color: var(--text-main);
+  user-select: none;
+}
+
+/* Camera Shake for Space Weather (Disabled automatically in Reduced Motion) */
+@keyframes solarStormShake {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-6px, 4px); }
+  50% { transform: translate(6px, -4px); }
+  75% { transform: translate(-4px, -6px); }
+}
+
+.shake-active:not(.reduced-motion) {
+  animation: solarStormShake 0.35s infinite;
+}
+
+.reduced-motion * {
+  animation-duration: 0.001ms !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* Tactile Control Deck (Bottom Bar) */
+.control-deck {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  padding: 12px 18px;
+  background: var(--bg-panel);
+  border: 3px solid var(--border-glow);
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.35);
+  z-index: 20;
+}
+
+.deck-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 135px;
+  padding: 12px 14px;
+  background: #1e293b;
+  border: 2px solid #475569;
+  border-bottom-width: 6px;
+  border-radius: 14px;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.15s;
+}
+
+.deck-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: var(--border-glow);
+}
+
+.deck-btn:active:not(:disabled) {
+  transform: translateY(2px);
+  border-bottom-width: 2px;
+}
+
+.deck-btn.active-state {
+  background: #064e3b;
+  border-color: var(--accent-green);
+}
+
+.deck-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.8);
+}
+
+.key-badge {
+  position: absolute;
+  top: -10px;
+  right: -6px;
+  background: var(--accent-amber);
+  color: #0f172a;
+  font-weight: 800;
+  font-size: 0.75rem;
+  padding: 2px 7px;
+  border-radius: 8px;
+  border: 2px solid #0f172a;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
