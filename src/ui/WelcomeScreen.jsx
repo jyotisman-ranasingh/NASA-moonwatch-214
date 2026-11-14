@@ -1,238 +1,303 @@
 // src/ui/WelcomeScreen.jsx
 import React, { useState } from 'react';
-import SciFiFrame from './SciFiFrame.jsx';
+
+// Public-domain high-contrast 2D Moon & Space reference images
+const MOON_SPACE_BG =
+  'https://images-assets.nasa.gov/image/PIA00405/PIA00405~orig.jpg';
+const DEEP_SPACE_STARS =
+  'https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001955/GSFC_20171208_Archive_e001955~orig.jpg';
 
 const CAMPAIGN_LEVELS = [
   {
     id: 1,
-    rank: 'CADET',
-    title: 'Power Basics',
-    sols: 14,
-    stars: '★ ★ ☆',
-    goal: 'Charge solar batteries and raise the Shield Dome when NASA flares hit.',
-    unlockedKeys: ['[1/P] Solar Panels', '[2/S] Shield Dome', '[3/O] Oxygen'],
+    title: 'Level 1: Power Basics',
+    sols: '14 Sols',
+    tags: [
+      'Solar panels',
+      'Battery reserve',
+      'Lunar night',
+      'Solar flares',
+      'Sol 214 choice',
+    ],
   },
   {
     id: 2,
-    rank: 'PILOT',
-    title: 'Life Support & Greenhouse',
-    sols: 21,
-    stars: '★ ★ ★',
-    goal: 'Grow space crops inside the Hydroponic Dome and scrub cabin CO₂.',
-    unlockedKeys: ['All Level 1 Keys', '[4/G] Water Greenhouse'],
+    title: 'Level 2: Life Support & Greenhouse',
+    sols: '21 Sols',
+    tags: [
+      'Hydroponic Greenhouse',
+      'CO₂ scrubbing',
+      'Crew health management',
+    ],
   },
   {
     id: 3,
-    rank: 'COMMANDER',
-    title: 'Deep Space Comms',
-    sols: 28,
-    stars: '★ ★ ★',
-    goal: 'Command all 5 lunar stations and beam weather telemetry to Earth.',
-    unlockedKeys: ['All Level 1 & 2 Keys', '[5/C] Queue Earth Comms'],
+    title: 'Level 3: Communications & Earth Delay',
+    sols: '28 Sols',
+    tags: [
+      'Earth comms delay queue',
+      'High-gain antenna sync',
+      'Delayed telemetry boosts',
+    ],
   },
 ];
 
-const GFX_LEVELS = ['LOW', 'MEDIUM', 'HIGH'];
-
 export default function WelcomeScreen({
-  selectedLevel,
+  selectedLevel = 1,
   onSelectLevel,
   onStartMission,
-  reducedMotion,
+  reducedMotion = false,
   onToggleReducedMotion,
-  graphicsPreset,
+  graphicsPreset = 'HIGH',
   onChangeGraphics,
 }) {
-  const [activeModal, setActiveModal] = useState(null); // 'TUTORIAL' | 'SETTINGS' | null
-  const currentCard = CAMPAIGN_LEVELS.find((l) => l.id === selectedLevel) || CAMPAIGN_LEVELS[0];
-  const gfxIndex = GFX_LEVELS.indexOf(graphicsPreset);
+  const [activeModal, setActiveModal] = useState(null); // 'SETTINGS' | 'TUTORIAL' | null
 
   return (
-    <div className="welcome-overlay">
-      <SciFiFrame title="LEVEL SELECT" className="welcome-card">
-        <header className="welcome-header">
-          <div>
-            <h1 className="welcome-title">MOONWATCH: SOL 214</h1>
-            <p className="welcome-subtitle">
-              Keep your crew alive. Real NASA flares. Your call.
-            </p>
+    <section className="astracon-root">
+      {/* 2D SPACE & GLOWING MOON BACKGROUND (Replaces the Black Hole) */}
+      <div className="astracon-space-bg">
+        <div
+          className="astracon-stars-layer"
+          style={{ backgroundImage: `url(${DEEP_SPACE_STARS})` }}
+        />
+
+        {/* 2D Moon with warm amber/copper atmospheric horizon glow */}
+        <div className="astracon-moon-wrapper">
+          <div className="astracon-moon-halo" />
+          <div className="astracon-horizon-beam" />
+          <img
+            src={MOON_SPACE_BG}
+            alt="2D Lunar Surface"
+            className="astracon-moon-img"
+          />
+        </div>
+
+        {/* Exact Dot-Matrix LED Halftone Grid Overlay from Astracon */}
+        <div className="astracon-dot-matrix" />
+      </div>
+
+      {/* FOREGROUND UI LAYER */}
+      <div className="astracon-ui-container">
+        {/* TOP ROW — YELLOW ZONE: "MOONWATCH NASA" Logo Badge (Red top-right nav removed) */}
+        <header className="astracon-top-bar">
+          <div className="astracon-brand-lockup">
+            <div className="astracon-logo-box" aria-hidden="true">
+              <svg width="26" height="26" viewBox="0 0 32 32">
+                <circle cx="16" cy="16" r="9" fill="#050505" />
+                <ellipse
+                  cx="16"
+                  cy="16"
+                  rx="14"
+                  ry="5"
+                  fill="none"
+                  stroke="#050505"
+                  strokeWidth="2.5"
+                  transform="rotate(-24 16 16)"
+                />
+                <circle cx="13" cy="13" r="2" fill="#ffffff" />
+              </svg>
+            </div>
+            <div className="astracon-brand-text">
+              <span>MOONWATCH</span>
+              <span>NASA</span>
+            </div>
           </div>
-          <div className="age-pill">AGES 9–14 • {currentCard.sols} SOLS</div>
         </header>
 
-        {/* LEVEL SELECT TILES (Matches Reference Grid) */}
-        <div className="level-grid">
-          {CAMPAIGN_LEVELS.map((lvl) => {
-            const isSelected = selectedLevel === lvl.id;
-            return (
-              <button
-                key={lvl.id}
-                type="button"
-                onClick={() => onSelectLevel(lvl.id)}
-                className={`level-card ${isSelected ? 'selected' : ''}`}
-              >
-                <div className="level-num-badge">{lvl.id}</div>
-                <div className="star-row">{lvl.stars}</div>
-                <h2 className="level-name">
-                  {lvl.rank}: {lvl.title}
-                </h2>
-                <p className="level-goal">{lvl.goal}</p>
-                <span
-                  className={isSelected ? 'scifi-btn-lime' : 'scifi-btn-cyan'}
-                  style={{ padding: '5px 14px', fontSize: '0.75rem' }}
+        {/* GREEN ZONE: Tagline + Pixelated Copper Title ("MOONWATCH" without Sol 214) */}
+        <div className="astracon-hero-block">
+          <p className="astracon-green-tagline">
+            KEEP YOUR CREW ALIVE. REAL NASA FLARES. YOUR CALL.
+          </p>
+          <h1 className="astracon-pixel-title">MOONWATCH</h1>
+        </div>
+
+        {/* BLUE ZONE: Level 1, Level 2 & Level 3 Content Tables (Middle red-circled text removed) */}
+        <div className="astracon-blue-zone">
+          <div className="astracon-zone-meta">
+            <span>SELECT MISSION CAMPAIGN LEVEL</span>
+            <span>AGES 9–14 • 3–8 MIN PER RUN</span>
+          </div>
+
+          <div className="astracon-level-grid">
+            {CAMPAIGN_LEVELS.map((lvl) => {
+              const isSelected = selectedLevel === lvl.id;
+              return (
+                <button
+                  key={lvl.id}
+                  type="button"
+                  onClick={() => onSelectLevel(lvl.id)}
+                  className={`astracon-level-card ${
+                    isSelected ? 'is-selected' : ''
+                  }`}
                 >
-                  {isSelected ? '✓ SELECTED' : `${lvl.sols} SOLS`}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+                  <div className="astracon-card-header">
+                    <span className="astracon-card-title">{lvl.title}</span>
+                    <span className="astracon-sols-pill">{lvl.sols}</span>
+                  </div>
 
-        {/* INSET LOADOUT BAR */}
-        <div className="scifi-inset-box loadout-strip">
-          <span style={{ fontSize: '0.78rem', fontWeight: 900, color: '#81d4fa' }}>
-            🕹️ LEVEL {selectedLevel} CONTROLS:
-          </span>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {currentCard.unlockedKeys.map((k) => (
-              <span key={k} className="loadout-chip">
-                {k}
-              </span>
-            ))}
-            <span className="loadout-chip">[SPACE] Next Sol</span>
-          </div>
-        </div>
-
-        {/* BOTTOM ACTION BAR (Matches BACK / PLAY Layout) */}
-        <footer className="welcome-footer">
-          <div className="secondary-actions">
-            <button
-              type="button"
-              className="scifi-btn-cyan menu-btn"
-              onClick={() => setActiveModal('SETTINGS')}
-            >
-              ⚙️ SETTING
-            </button>
-            <button
-              type="button"
-              className="scifi-btn-cyan menu-btn"
-              onClick={() => setActiveModal('TUTORIAL')}
-            >
-              ❓ QUEST GUIDE
-            </button>
-          </div>
-
-          <button
-            type="button"
-            className="scifi-btn-lime start-mission-btn"
-            onClick={onStartMission}
-          >
-            PLAY →
-          </button>
-        </footer>
-      </SciFiFrame>
-
-      {/* NEW QUEST / HOW TO PLAY MODAL */}
-      {activeModal === 'TUTORIAL' && (
-        <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 470 }}>
-            <SciFiFrame
-              title="MISSION QUEST"
-              onClose={() => setActiveModal(null)}
-              className="modal-box"
-            >
-              <ul className="tutorial-list">
-                <li><strong>☀️ Solar Panels [1/P]:</strong> Extend for power, retract before flares.</li>
-                <li><strong>🛡️ Shield Dome [2/S]:</strong> Blocks radiation during NASA CME alerts.</li>
-                <li><strong>🫧 Oxygen Core [3/O]:</strong> Cycle Low / Normal / High air levels.</li>
-                <li><strong>🌱 Greenhouse [4/G]:</strong> Scrubs CO₂ in Level 2+.</li>
-                <li><strong>📡 Earth Comms [5/C]:</strong> Beam data in Level 3.</li>
-              </ul>
-              <button
-                type="button"
-                className="scifi-btn-lime"
-                style={{ width: '100%', padding: '12px' }}
-                onClick={() => setActiveModal(null)}
-              >
-                GOT IT
-              </button>
-            </SciFiFrame>
-          </div>
-        </div>
-      )}
-
-      {/* SETTING MODAL (Matches Reference Segmented Meter UI) */}
-      {activeModal === 'SETTINGS' && (
-        <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 470 }}>
-            <SciFiFrame
-              title="SETTING"
-              onClose={() => setActiveModal(null)}
-              className="modal-box"
-            >
-              {/* Segmented Graphics Quality Meter */}
-              <div className="settings-row">
-                <span>GRAPHICS</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <button
-                    type="button"
-                    className="scifi-btn-cyan"
-                    style={{ width: 30, height: 30 }}
-                    onClick={() =>
-                      onChangeGraphics(GFX_LEVELS[Math.max(0, gfxIndex - 1)])
-                    }
-                  >
-                    -
-                  </button>
-                  <div className="segmented-meter">
-                    {GFX_LEVELS.map((preset, idx) => (
-                      <div
-                        key={preset}
-                        onClick={() => onChangeGraphics(preset)}
-                        className={`meter-cell ${idx <= gfxIndex ? 'filled' : ''}`}
-                        style={{ width: 34 }}
-                        title={preset}
-                      />
+                  {/* Only the clean feature pill tags from Picture 1 */}
+                  <div className="astracon-tags-table">
+                    {lvl.tags.map((tag) => (
+                      <span key={tag} className="astracon-tag-chip">
+                        {tag}
+                      </span>
                     ))}
                   </div>
-                  <button
-                    type="button"
-                    className="scifi-btn-cyan"
-                    style={{ width: 30, height: 30 }}
-                    onClick={() =>
-                      onChangeGraphics(GFX_LEVELS[Math.min(2, gfxIndex + 1)])
-                    }
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-
-              {/* Reduced Motion Toggle */}
-              <div className="settings-row">
-                <span>REDUCED MOTION</span>
-                <button
-                  type="button"
-                  className={reducedMotion ? 'scifi-btn-lime' : 'scifi-btn-cyan'}
-                  style={{ padding: '6px 18px' }}
-                  onClick={onToggleReducedMotion}
-                >
-                  {reducedMotion ? 'ON' : 'OFF'}
                 </button>
-              </div>
+              );
+            })}
+          </div>
+        </div>
 
+        {/* BOTTOM BAR — PURPLE ZONE (Settings & Tutorial) + RIGHT CTA (Start Mission) */}
+        <footer className="astracon-bottom-bar">
+          {/* Purple Zone: Settings & Tutorial in exact Astracon button style */}
+          <div className="astracon-purple-actions">
+            <button
+              type="button"
+              className="astracon-btn-white"
+              onClick={() => setActiveModal('SETTINGS')}
+            >
+              <span>⚙ SETTINGS</span>
+              <span className="astracon-pixel-arrow">»</span>
+            </button>
+
+            <button
+              type="button"
+              className="astracon-btn-outline"
+              onClick={() => setActiveModal('TUTORIAL')}
+            >
+              ? TUTORIAL
+            </button>
+          </div>
+
+          {/* Bottom-Right Slot: Start Mission Button */}
+          <button
+            type="button"
+            className="astracon-btn-start"
+            onClick={onStartMission}
+          >
+            <span>START MISSION</span>
+            <span className="astracon-pixel-arrow">→</span>
+          </button>
+        </footer>
+      </div>
+
+      {/* SETTINGS MODAL */}
+      {activeModal === 'SETTINGS' && (
+        <div
+          className="astracon-modal-backdrop"
+          onClick={() => setActiveModal(null)}
+        >
+          <div
+            className="astracon-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="astracon-modal-header">
+              <h2>⚙ SYSTEM SETTINGS</h2>
               <button
                 type="button"
-                className="scifi-btn-lime"
-                style={{ width: '100%', padding: '12px', marginTop: 12 }}
+                className="astracon-close"
                 onClick={() => setActiveModal(null)}
               >
-                APPLY
+                ✕
               </button>
-            </SciFiFrame>
+            </div>
+
+            <div className="astracon-setting-row">
+              <span>REDUCED MOTION (PAUSE TIMER & NO SHAKE)</span>
+              <button
+                type="button"
+                className="astracon-btn-outline"
+                onClick={onToggleReducedMotion}
+              >
+                {reducedMotion ? 'ENABLED [ON]' : 'DISABLED [OFF]'}
+              </button>
+            </div>
+
+            <div className="astracon-setting-row">
+              <span>GRAPHICS PRESET (AUTO-FPS DOWNGRADE)</span>
+              <select
+                value={graphicsPreset}
+                onChange={(e) => onChangeGraphics(e.target.value)}
+                className="astracon-select"
+              >
+                <option value="LOW">LOW</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="HIGH">HIGH</option>
+              </select>
+            </div>
+
+            <button
+              type="button"
+              className="astracon-btn-white"
+              style={{ width: '100%', justifyContent: 'center', marginTop: 18 }}
+              onClick={() => setActiveModal(null)}
+            >
+              SAVE & CLOSE
+            </button>
           </div>
         </div>
       )}
-    </div>
+
+      {/* TUTORIAL MODAL */}
+      {activeModal === 'TUTORIAL' && (
+        <div
+          className="astracon-modal-backdrop"
+          onClick={() => setActiveModal(null)}
+        >
+          <div
+            className="astracon-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="astracon-modal-header">
+              <h2>? TACTICAL KEYBOARD CONTROLS</h2>
+              <button
+                type="button"
+                className="astracon-close"
+                onClick={() => setActiveModal(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <ul className="astracon-tutorial-list">
+              <li>
+                <strong>[1] or [P]:</strong> Toggle Solar Panels (EXTENDED / RETRACTED)
+              </li>
+              <li>
+                <strong>[2] or [S]:</strong> Toggle Shield Dome (ON / OFF)
+              </li>
+              <li>
+                <strong>[3] or [O]:</strong> Cycle Oxygen Level (LOW / NORMAL / HIGH)
+              </li>
+              <li>
+                <strong>[4] or [G]:</strong> Toggle Greenhouse Watering (Level 2+)
+              </li>
+              <li>
+                <strong>[5] or [C]:</strong> Queue Earth Comms (Level 3)
+              </li>
+              <li>
+                <strong>[SPACE] or [ENTER]:</strong> Advance to Next Sol
+              </li>
+              <li>
+                <strong>[ESC]:</strong> Dismiss Space-Weather Alert Modal
+              </li>
+            </ul>
+
+            <button
+              type="button"
+              className="astracon-btn-white"
+              style={{ width: '100%', justifyContent: 'center', marginTop: 14 }}
+              onClick={() => setActiveModal(null)}
+            >
+              ACKNOWLEDGE
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
