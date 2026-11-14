@@ -1,5 +1,6 @@
 // src/ui/PauseModal.jsx
 import React from 'react';
+import SciFiFrame from './SciFiFrame.jsx';
 
 export default function PauseModal({
   sol,
@@ -17,41 +18,53 @@ export default function PauseModal({
       aria-modal="true"
       aria-labelledby="pause-title"
     >
-      <div className="pause-card">
-        <div className="pause-badge">⏸ SIMULATION FROZEN</div>
-        <h2 id="pause-title" className="pause-title">
-          MISSION PAUSED
-        </h2>
-        <p className="pause-meta">
-          Commander <strong>{characterName}</strong> • Level {level} (Sol {sol} / {maxSol})
+      <SciFiFrame
+        title="OPTIONS"
+        onClose={onResume}
+        className="pause-card"
+      >
+        <p id="pause-title" className="pause-meta">
+          {characterName} • LEVEL {level} (SOL {sol}/{maxSol})
         </p>
 
         <div className="pause-actions">
           <button
             type="button"
-            className="pause-btn resume-btn"
+            className="scifi-btn-lime option-row-btn"
             onClick={onResume}
           >
-            ▶️ Resume Mission
+            <span className="option-icon-circle">▶</span>
+            <span>RESUME</span>
           </button>
 
           <button
             type="button"
-            className="pause-btn restart-btn"
+            className="scifi-btn-cyan option-row-btn"
             onClick={onRestart}
           >
-            🔄 Restart Level {level}
+            <span className="option-icon-circle">↻</span>
+            <span>RESTART</span>
           </button>
 
           <button
             type="button"
-            className="pause-btn exit-btn"
+            className="scifi-btn-cyan option-row-btn"
             onClick={onExit}
           >
-            🚪 Exit to Welcome Screen
+            <span className="option-icon-circle">☰</span>
+            <span>LEVELS</span>
+          </button>
+
+          <button
+            type="button"
+            className="scifi-btn-cyan option-row-btn"
+            onClick={onExit}
+          >
+            <span className="option-icon-circle">⎋</span>
+            <span>QUIT</span>
           </button>
         </div>
-      </div>
+      </SciFiFrame>
     </div>
   );
 }
