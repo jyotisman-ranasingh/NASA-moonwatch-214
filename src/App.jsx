@@ -6,6 +6,7 @@ import SpriteActor from './scene/SpriteActor.jsx';
 import MissionHUD from './ui/MissionHUD.jsx';
 import WelcomeScreen from './ui/WelcomeScreen.jsx';
 import BriefingScreen, { CREW_ROSTER } from './ui/BriefingScreen.jsx';
+import PauseModal from './ui/PauseModal.jsx';
 import useFpsMonitor from './engine/useFpsMonitor.js';
 
 const O2_CYCLE = ['LOW', 'NORMAL', 'HIGH'];
@@ -16,6 +17,7 @@ export default function App() {
   const [screen, setScreen] = useState('WELCOME');
   const [level, setLevel] = useState(1);
   const [selectedCharacter, setSelectedCharacter] = useState(CREW_ROSTER[0]);
+  const [isPaused, setIsPaused] = useState(false);
 
   const [sol, setSol] = useState(1);
   const [countdown, setCountdown] = useState(30);
@@ -36,19 +38,43 @@ export default function App() {
   const fps = useFpsMonitor(graphicsPreset, setGraphicsPreset);
   const maxSol = LEVEL_SOLS[level] || 14;
 
-  const handleStartGame = () => {
+  // Resets all mission stations & timers to Sol 1 defaults
+  const resetMissionState = useCallback(() => {
     setSol(1);
     setCountdown(30);
+    setSolarExtended(true);
+    setShieldActive(false);
+    setOxygenLevel('NORMAL');
+    setGreenhouseActive(false);
+    setCommsQueued(false);
+    setActiveStation('OXYGEN');
+    setAlertModal(null);
+    setIsPaused(false);
+  }, []);
+
+  const handleStartGame = () => {
+    resetMissionState();
     setScreen('PLAYING');
   };
 
+  const handleRestartMission = () => {
+    resetMissionState();
+  };
+
+  const handleExitToWelcome = () => {
+    resetMissionState();
+    setScreen('WELCOME');
+  };
+
   const handleAdvanceSol = useCallback(() => {
+    if (isPaused) return;
     setSol((prev) => Math.min(prev + 1, maxSol));
     setCountdown(30);
-  }, [maxSol]);
+  }, [isPaused, maxSol]);
 
+  // Countdown freezes when not playing, when paused, or when Reduced Motion is active
   useEffect(() => {
-    if (screen !== 'PLAYING' || reducedMotion) return;
+    if (screen !== 'PLAYING' || isPaused || reducedMotion) return;
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
@@ -59,11 +85,11 @@ export default function App() {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [screen, reducedMotion, handleAdvanceSol]);
+  }, [screen, isPaused, reducedMotion, handleAdvanceSol]);
 
   return (
     <main
-      className={`mission-root ${alertModal ? 'shake-active' : ''} ${
+      className={`mission-root ${alertModal && !isPaused ? 'shake-active' : ''} ${
         reducedMotion ? 'reduced-motion' : ''
       }`}
     >
@@ -110,6 +136,7 @@ export default function App() {
             maxSol={maxSol}
             countdown={countdown}
             level={level}
+            isPaused={isPaused}
             solarExtended={solarExtended}
             shieldActive={shieldActive}
             oxygenLevel={oxygenLevel}
@@ -119,6 +146,7 @@ export default function App() {
             reducedMotion={reducedMotion}
             graphicsPreset={graphicsPreset}
             fps={fps}
+            onTogglePause={() => setIsPaused((v) => !v)}
             onToggleSolar={() => {
               setSolarExtended((v) => !v);
               setActiveStation('SOLAR');
@@ -148,6 +176,18 @@ export default function App() {
             onToggleReducedMotion={() => setReducedMotion((v) => !v)}
             onChangeGraphics={setGraphicsPreset}
           />
+
+          {isPaused && (
+            <PauseModal
+              sol={sol}
+              maxSol={maxSol}
+              level={level}
+              characterName={selectedCharacter.name}
+              onResume={() => setIsPaused(false)}
+              onRestart={handleRestartMission}
+              onExit={handleExitToWelcome}
+            />
+          )}
         </>
       )}
     </main>
