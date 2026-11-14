@@ -660,34 +660,20 @@
 }
 
 /* 2D Moon & Space Background with Dot-Matrix Halftone Effect */
-/* 2D Moon & Space Background with Dot-Matrix Halftone Effect */
+/* 2D Half-Lit Moon & Deep Space Background */
 .astracon-space-bg {
   position: absolute;
   inset: 0;
   z-index: 1;
   overflow: hidden;
   pointer-events: none;
-  background: radial-gradient(circle at 50% 40%, #14110e 0%, #040302 78%);
+  background: #020305;
 }
 
-.astracon-moon-svg {
-  position: absolute;
-  inset: 0;
+.astracon-moon-canvas {
+  display: block;
   width: 100%;
   height: 100%;
-  z-index: 1;
-}
-
-/* LED Dot-Matrix Halftone Grid */
-.astracon-dot-matrix {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  background-image: radial-gradient(
-    rgba(4, 3, 2, 0.72) 1.4px,
-    transparent 1.4px
-  );
-  background-size: 4px 4px;
 }
 
 .astracon-stars-layer {
