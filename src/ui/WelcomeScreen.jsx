@@ -1,41 +1,38 @@
 // src/ui/WelcomeScreen.jsx
 import React, { useState } from 'react';
+import SciFiFrame from './SciFiFrame.jsx';
 
 const CAMPAIGN_LEVELS = [
   {
     id: 1,
-    rank: '🌱 CADET',
-    title: 'Level 1: Power Basics',
+    rank: 'CADET',
+    title: 'Power Basics',
     sols: 14,
-    stars: '⭐',
-    accent: '#fbbf24',
-    icon: '☀️🛡️',
-    goal: 'Learn to charge your lunar batteries and raise the Shield Dome when solar storms hit!',
-    unlockedKeys: ['[1 / P] Solar Panels', '[2 / S] Shield Dome', '[3 / O] Oxygen'],
+    stars: '★ ★ ☆',
+    goal: 'Charge solar batteries and raise the Shield Dome when NASA flares hit.',
+    unlockedKeys: ['[1/P] Solar Panels', '[2/S] Shield Dome', '[3/O] Oxygen'],
   },
   {
     id: 2,
-    rank: '🚀 PILOT',
-    title: 'Level 2: Life Support & Greenhouse',
+    rank: 'PILOT',
+    title: 'Life Support & Greenhouse',
     sols: 21,
-    stars: '⭐⭐',
-    accent: '#38bdf8',
-    icon: '🌱🫧',
-    goal: 'Grow space crops inside the Hydroponic Dome and keep your crew breathing fresh oxygen!',
-    unlockedKeys: ['All Level 1 Keys', '[4 / G] Water Greenhouse'],
+    stars: '★ ★ ★',
+    goal: 'Grow space crops inside the Hydroponic Dome and scrub cabin CO₂.',
+    unlockedKeys: ['All Level 1 Keys', '[4/G] Water Greenhouse'],
   },
   {
     id: 3,
-    rank: '👑 COMMANDER',
-    title: 'Level 3: Deep Space Comms',
+    rank: 'COMMANDER',
+    title: 'Deep Space Comms',
     sols: 28,
-    stars: '⭐⭐⭐',
-    accent: '#a855f7',
-    icon: '📡🌍',
-    goal: 'Master the full moonbase and beam emergency weather data back to Mission Control on Earth!',
-    unlockedKeys: ['All Level 1 & 2 Keys', '[5 / C] Queue Earth Comms'],
+    stars: '★ ★ ★',
+    goal: 'Command all 5 lunar stations and beam weather telemetry to Earth.',
+    unlockedKeys: ['All Level 1 & 2 Keys', '[5/C] Queue Earth Comms'],
   },
 ];
+
+const GFX_LEVELS = ['LOW', 'MEDIUM', 'HIGH'];
 
 export default function WelcomeScreen({
   selectedLevel,
@@ -48,31 +45,22 @@ export default function WelcomeScreen({
 }) {
   const [activeModal, setActiveModal] = useState(null); // 'TUTORIAL' | 'SETTINGS' | null
   const currentCard = CAMPAIGN_LEVELS.find((l) => l.id === selectedLevel) || CAMPAIGN_LEVELS[0];
+  const gfxIndex = GFX_LEVELS.indexOf(graphicsPreset);
 
   return (
     <div className="welcome-overlay">
-      <div className="welcome-card">
-        {/* Clean Header (Top technical badges removed) */}
+      <SciFiFrame title="LEVEL SELECT" className="welcome-card">
         <header className="welcome-header">
           <div>
-            <div className="welcome-greeting">👋 WELCOME ABOARD, ASTRONAUT!</div>
-            <h1 className="welcome-title">MOONWATCH: Sol 214</h1>
+            <h1 className="welcome-title">MOONWATCH: SOL 214</h1>
             <p className="welcome-subtitle">
               Keep your crew alive. Real NASA flares. Your call.
             </p>
           </div>
-          <div className="age-pill">🎮 AGES 9–14 • 3–8 MIN RUN</div>
+          <div className="age-pill">AGES 9–14 • {currentCard.sols} SOLS</div>
         </header>
 
-        {/* Step Prompt */}
-        <div className="section-label">
-          <span>CHOOSE YOUR MISSION DIFFICULTY</span>
-          <span style={{ color: currentCard.accent }}>
-            Selected: {currentCard.rank} ({currentCard.sols} Sols)
-          </span>
-        </div>
-
-        {/* Simplified, Kid-Friendly Level Cards (Dense tags removed) */}
+        {/* LEVEL SELECT TILES (Matches Reference Grid) */}
         <div className="level-grid">
           {CAMPAIGN_LEVELS.map((lvl) => {
             const isSelected = selectedLevel === lvl.id;
@@ -82,36 +70,30 @@ export default function WelcomeScreen({
                 type="button"
                 onClick={() => onSelectLevel(lvl.id)}
                 className={`level-card ${isSelected ? 'selected' : ''}`}
-                style={{
-                  '--card-accent': lvl.accent,
-                }}
               >
-                <div className="level-card-top">
-                  <span className="rank-badge" style={{ background: lvl.accent }}>
-                    {lvl.rank}
-                  </span>
-                  <span className="sol-pill">{lvl.sols} Sols</span>
-                </div>
-
-                <div className="level-icon">{lvl.icon}</div>
-                <h2 className="level-name">{lvl.title}</h2>
+                <div className="level-num-badge">{lvl.id}</div>
+                <div className="star-row">{lvl.stars}</div>
+                <h2 className="level-name">
+                  {lvl.rank}: {lvl.title}
+                </h2>
                 <p className="level-goal">{lvl.goal}</p>
-
-                <div className="level-footer">
-                  <span>Difficulty: {lvl.stars}</span>
-                  <span className="select-indicator">
-                    {isSelected ? '✓ READY' : 'Click to Select'}
-                  </span>
-                </div>
+                <span
+                  className={isSelected ? 'scifi-btn-lime' : 'scifi-btn-cyan'}
+                  style={{ padding: '5px 14px', fontSize: '0.75rem' }}
+                >
+                  {isSelected ? '✓ SELECTED' : `${lvl.sols} SOLS`}
+                </span>
               </button>
             );
           })}
         </div>
 
-        {/* Helpful Addition: Visual Loadout Strip for the Selected Level */}
-        <div className="loadout-strip">
-          <span className="loadout-title">🕹️ YOUR CONTROLS FOR LEVEL {selectedLevel}:</span>
-          <div className="loadout-chips">
+        {/* INSET LOADOUT BAR */}
+        <div className="scifi-inset-box loadout-strip">
+          <span style={{ fontSize: '0.78rem', fontWeight: 900, color: '#81d4fa' }}>
+            🕹️ LEVEL {selectedLevel} CONTROLS:
+          </span>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {currentCard.unlockedKeys.map((k) => (
               <span key={k} className="loadout-chip">
                 {k}
@@ -121,91 +103,133 @@ export default function WelcomeScreen({
           </div>
         </div>
 
-        {/* Clean Bottom Action Bar (Replay Seed & Credits removed) */}
+        {/* BOTTOM ACTION BAR (Matches BACK / PLAY Layout) */}
         <footer className="welcome-footer">
           <div className="secondary-actions">
             <button
               type="button"
-              className="menu-btn settings-btn"
+              className="scifi-btn-cyan menu-btn"
               onClick={() => setActiveModal('SETTINGS')}
             >
-              ⚙️ Settings
+              ⚙️ SETTING
             </button>
             <button
               type="button"
-              className="menu-btn tutorial-btn"
+              className="scifi-btn-cyan menu-btn"
               onClick={() => setActiveModal('TUTORIAL')}
             >
-              ❓ How to Play
+              ❓ QUEST GUIDE
             </button>
           </div>
 
           <button
             type="button"
-            className="start-mission-btn"
+            className="scifi-btn-lime start-mission-btn"
             onClick={onStartMission}
           >
-            🚀 Start Mission →
+            PLAY →
           </button>
         </footer>
-      </div>
+      </SciFiFrame>
 
-      {/* Kid-Friendly How to Play Modal */}
+      {/* NEW QUEST / HOW TO PLAY MODAL */}
       {activeModal === 'TUTORIAL' && (
         <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <h2>🧑‍🚀 Commander's Quick Guide</h2>
-            <ul className="tutorial-list">
-              <li>
-                <strong>☀️ Watch the Sun:</strong> Extend Solar Panels <code>[1/P]</code> on calm days to charge batteries.
-              </li>
-              <li>
-                <strong>🛡️ Block Solar Storms:</strong> When a NASA Flare alert pops up, retract panels and turn ON your Shield Dome <code>[2/S]</code>!
-              </li>
-              <li>
-                <strong>🫧 Keep Crew Happy:</strong> Cycle Oxygen <code>[3/O]</code>, water crops <code>[4/G]</code>, and beam data to Earth <code>[5/C]</code>.
-              </li>
-              <li>
-                <strong>⏭️ Advance Days:</strong> Press <code>[Space]</code> or <code>[Enter]</code> when your base is ready for the next Sol!
-              </li>
-            </ul>
-            <button className="start-mission-btn" onClick={() => setActiveModal(null)}>
-              Got It! Let's Play
-            </button>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 470 }}>
+            <SciFiFrame
+              title="MISSION QUEST"
+              onClose={() => setActiveModal(null)}
+              className="modal-box"
+            >
+              <ul className="tutorial-list">
+                <li><strong>☀️ Solar Panels [1/P]:</strong> Extend for power, retract before flares.</li>
+                <li><strong>🛡️ Shield Dome [2/S]:</strong> Blocks radiation during NASA CME alerts.</li>
+                <li><strong>🫧 Oxygen Core [3/O]:</strong> Cycle Low / Normal / High air levels.</li>
+                <li><strong>🌱 Greenhouse [4/G]:</strong> Scrubs CO₂ in Level 2+.</li>
+                <li><strong>📡 Earth Comms [5/C]:</strong> Beam data in Level 3.</li>
+              </ul>
+              <button
+                type="button"
+                className="scifi-btn-lime"
+                style={{ width: '100%', padding: '12px' }}
+                onClick={() => setActiveModal(null)}
+              >
+                GOT IT
+              </button>
+            </SciFiFrame>
           </div>
         </div>
       )}
 
-      {/* Accessibility & Graphics Settings Modal */}
+      {/* SETTING MODAL (Matches Reference Segmented Meter UI) */}
       {activeModal === 'SETTINGS' && (
         <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <h2>⚙️ Mission Settings</h2>
-            <div className="settings-row">
-              <span>Reduced Motion (No Shake + Pause Timer)</span>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 470 }}>
+            <SciFiFrame
+              title="SETTING"
+              onClose={() => setActiveModal(null)}
+              className="modal-box"
+            >
+              {/* Segmented Graphics Quality Meter */}
+              <div className="settings-row">
+                <span>GRAPHICS</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <button
+                    type="button"
+                    className="scifi-btn-cyan"
+                    style={{ width: 30, height: 30 }}
+                    onClick={() =>
+                      onChangeGraphics(GFX_LEVELS[Math.max(0, gfxIndex - 1)])
+                    }
+                  >
+                    -
+                  </button>
+                  <div className="segmented-meter">
+                    {GFX_LEVELS.map((preset, idx) => (
+                      <div
+                        key={preset}
+                        onClick={() => onChangeGraphics(preset)}
+                        className={`meter-cell ${idx <= gfxIndex ? 'filled' : ''}`}
+                        style={{ width: 34 }}
+                        title={preset}
+                      />
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    className="scifi-btn-cyan"
+                    style={{ width: 30, height: 30 }}
+                    onClick={() =>
+                      onChangeGraphics(GFX_LEVELS[Math.min(2, gfxIndex + 1)])
+                    }
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Reduced Motion Toggle */}
+              <div className="settings-row">
+                <span>REDUCED MOTION</span>
+                <button
+                  type="button"
+                  className={reducedMotion ? 'scifi-btn-lime' : 'scifi-btn-cyan'}
+                  style={{ padding: '6px 18px' }}
+                  onClick={onToggleReducedMotion}
+                >
+                  {reducedMotion ? 'ON' : 'OFF'}
+                </button>
+              </div>
+
               <button
                 type="button"
-                className="menu-btn"
-                onClick={onToggleReducedMotion}
+                className="scifi-btn-lime"
+                style={{ width: '100%', padding: '12px', marginTop: 12 }}
+                onClick={() => setActiveModal(null)}
               >
-                {reducedMotion ? '✅ ON' : '❌ OFF'}
+                APPLY
               </button>
-            </div>
-            <div className="settings-row">
-              <span>Graphics Quality</span>
-              <select
-                value={graphicsPreset}
-                onChange={(e) => onChangeGraphics(e.target.value)}
-                className="gfx-select"
-              >
-                <option value="LOW">LOW (Fastest)</option>
-                <option value="MEDIUM">MEDIUM</option>
-                <option value="HIGH">HIGH (Best Visuals)</option>
-              </select>
-            </div>
-            <button className="start-mission-btn" onClick={() => setActiveModal(null)}>
-              Save & Close
-            </button>
+            </SciFiFrame>
           </div>
         </div>
       )}
