@@ -6,6 +6,7 @@ export default function MissionHUD({
   maxSol = 214,
   countdown,
   level,
+  isPaused,
   solarExtended,
   shieldActive,
   oxygenLevel, // 'LOW' | 'NORMAL' | 'HIGH'
@@ -15,6 +16,7 @@ export default function MissionHUD({
   reducedMotion,
   graphicsPreset,
   fps,
+  onTogglePause,
   onToggleSolar,
   onToggleShield,
   onCycleOxygen,
@@ -25,10 +27,12 @@ export default function MissionHUD({
   onToggleReducedMotion,
   onChangeGraphics,
 }) {
-  // Global Keyboard Navigation Listener
+  // Global Keyboard Navigation Listener (Disabled when isPaused is true)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+      if (isPaused) return;
+
       const key = e.key.toLowerCase();
 
       if (key === '1' || key === 'p') {
@@ -58,6 +62,7 @@ export default function MissionHUD({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [
+    isPaused,
     level,
     onToggleSolar,
     onToggleShield,
@@ -68,7 +73,6 @@ export default function MissionHUD({
     onDismissAlert,
   ]);
 
-  // Colour-blind safe icon + pattern helper
   const getO2Meta = () => {
     if (oxygenLevel === 'LOW') return { icon: '⚠️', pattern: 'url(#pat-stripes)', pct: 30, label: 'LOW (DANGER)' };
     if (oxygenLevel === 'HIGH') return { icon: '◆', pattern: 'url(#pat-dots)', pct: 100, label: 'HIGH (BOOST)' };
@@ -97,7 +101,7 @@ export default function MissionHUD({
         </defs>
       </svg>
 
-      {/* TOP BAR: Mission Status, Color-Blind Safe Gauge & Accessibility Controls */}
+      {/* TOP BAR */}
       <header
         style={{
           position: 'absolute',
@@ -111,7 +115,7 @@ export default function MissionHUD({
           zIndex: 20,
         }}
       >
-        {/* Sol 214 Progress & Timer */}
+        {/* Sol Progress & Timer */}
         <div
           style={{
             background: 'var(--bg-panel)',
@@ -135,12 +139,16 @@ export default function MissionHUD({
           <div style={{ borderLeft: '2px solid #334155', paddingLeft: 14 }}>
             <div style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>NEXT SOL TIMER</div>
             <div style={{ fontSize: '1.1rem', fontWeight: 800 }}>
-              {reducedMotion ? '⏸ PAUSED (REDUCED MOTION)' : `⏱ ${countdown}s`}
+              {isPaused
+                ? '⏸ GAME PAUSED'
+                : reducedMotion
+                ? '⏸ PAUSED (REDUCED MOTION)'
+                : `⏱ ${countdown}s`}
             </div>
           </div>
         </div>
 
-        {/* Colour-Blind Safe O2 Gauge (Icon + SVG Pattern + Text) */}
+        {/* Colour-Blind Safe O2 Gauge */}
         <div
           style={{
             background: 'var(--bg-panel)',
@@ -160,7 +168,7 @@ export default function MissionHUD({
           </svg>
         </div>
 
-        {/* Accessibility & Graphics Bar */}
+        {/* Accessibility, Graphics & Pause Bar */}
         <div
           style={{
             background: 'var(--bg-panel)',
@@ -174,6 +182,7 @@ export default function MissionHUD({
           }}
         >
           <button
+            type="button"
             onClick={onToggleReducedMotion}
             style={{
               background: reducedMotion ? '#059669' : '#334155',
@@ -211,11 +220,21 @@ export default function MissionHUD({
           <span style={{ color: fps < 30 ? '#f87171' : '#34d399', fontWeight: 900 }}>
             {fps} FPS
           </span>
+
+          {/* PAUSE BUTTON */}
+          <button
+            type="button"
+            className="pause-trigger-btn"
+            onClick={onTogglePause}
+            aria-label="Pause Game"
+          >
+            ⏸ Pause
+          </button>
         </div>
       </header>
 
-      {/* SPACE-WEATHER ALERT MODAL (Dismiss with Esc) */}
-      {alertModal && (
+      {/* SPACE-WEATHER ALERT MODAL */}
+      {alertModal && !isPaused && (
         <div
           role="dialog"
           aria-modal="true"
@@ -239,6 +258,7 @@ export default function MissionHUD({
             {alertModal.message || 'Incoming Coronal Mass Ejection! Retract Solar Panels [1/P] and raise your Shield Dome [2/S]!'}
           </p>
           <button
+            type="button"
             onClick={onDismissAlert}
             style={{
               background: '#fbbf24',
@@ -258,8 +278,10 @@ export default function MissionHUD({
       {/* BOTTOM TACTILE NAVIGATION DECK */}
       <nav className="control-deck" aria-label="Lunar Base Controls">
         <button
+          type="button"
           className={`deck-btn ${solarExtended ? 'active-state' : ''}`}
           onClick={onToggleSolar}
+          disabled={isPaused}
         >
           <span className="key-badge">1 / P</span>
           <span style={{ fontSize: '1.5rem' }}>☀️</span>
@@ -268,8 +290,10 @@ export default function MissionHUD({
         </button>
 
         <button
+          type="button"
           className={`deck-btn ${shieldActive ? 'active-state' : ''}`}
           onClick={onToggleShield}
+          disabled={isPaused}
         >
           <span className="key-badge">2 / S</span>
           <span style={{ fontSize: '1.5rem' }}>🛡️</span>
@@ -277,7 +301,12 @@ export default function MissionHUD({
           <small style={{ color: '#bae6fd' }}>{shieldActive ? 'ON' : 'OFF'}</small>
         </button>
 
-        <button className="deck-btn" onClick={onCycleOxygen}>
+        <button
+          type="button"
+          className="deck-btn"
+          onClick={onCycleOxygen}
+          disabled={isPaused}
+        >
           <span className="key-badge">3 / O</span>
           <span style={{ fontSize: '1.5rem' }}>🫧</span>
           <strong>Cycle O₂</strong>
@@ -285,9 +314,10 @@ export default function MissionHUD({
         </button>
 
         <button
+          type="button"
           className={`deck-btn ${greenhouseActive ? 'active-state' : ''}`}
           onClick={onToggleGreenhouse}
-          disabled={level < 2}
+          disabled={isPaused || level < 2}
           title={level < 2 ? 'Unlocks at Level 2' : 'Toggle Greenhouse Watering'}
         >
           <span className="key-badge">4 / G</span>
@@ -297,9 +327,10 @@ export default function MissionHUD({
         </button>
 
         <button
+          type="button"
           className={`deck-btn ${commsQueued ? 'active-state' : ''}`}
           onClick={onToggleComms}
-          disabled={level < 3}
+          disabled={isPaused || level < 3}
           title={level < 3 ? 'Unlocks at Level 3' : 'Queue Earth Comms'}
         >
           <span className="key-badge">5 / C</span>
@@ -309,8 +340,10 @@ export default function MissionHUD({
         </button>
 
         <button
+          type="button"
           className="deck-btn"
           onClick={onAdvanceSol}
+          disabled={isPaused}
           style={{ background: '#2563eb', borderColor: '#93c5fd' }}
         >
           <span className="key-badge">SPACE / ↵</span>
