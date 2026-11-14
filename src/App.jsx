@@ -1,19 +1,22 @@
 // src/App.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import './ui/missionDeck.css';
-import Parallax2D from './scene/Parallax2D';
-import SpriteActor from './scene/SpriteActor';
+import Parallax2D from './scene/Parallax2D.jsx';
+import SpriteActor from './scene/SpriteActor.jsx';
 import MissionHUD from './ui/MissionHUD.jsx';
 import WelcomeScreen from './ui/WelcomeScreen.jsx';
-import useFpsMonitor from './engine/useFpsMonitor';
+import BriefingScreen, { CREW_ROSTER } from './ui/BriefingScreen.jsx';
+import useFpsMonitor from './engine/useFpsMonitor.js';
 
 const O2_CYCLE = ['LOW', 'NORMAL', 'HIGH'];
 const LEVEL_SOLS = { 1: 14, 2: 21, 3: 28 };
 
 export default function App() {
-  // Mission flow state (Starts on WelcomeScreen first!)
-  const [missionStarted, setMissionStarted] = useState(false);
+  // 3-step screen flow: 'WELCOME' -> 'BRIEFING' -> 'PLAYING'
+  const [screen, setScreen] = useState('WELCOME');
   const [level, setLevel] = useState(1);
+  const [selectedCharacter, setSelectedCharacter] = useState(CREW_ROSTER[0]);
+
   const [sol, setSol] = useState(1);
   const [countdown, setCountdown] = useState(30);
 
@@ -33,10 +36,10 @@ export default function App() {
   const fps = useFpsMonitor(graphicsPreset, setGraphicsPreset);
   const maxSol = LEVEL_SOLS[level] || 14;
 
-  const handleStartMission = () => {
+  const handleStartGame = () => {
     setSol(1);
     setCountdown(30);
-    setMissionStarted(true);
+    setScreen('PLAYING');
   };
 
   const handleAdvanceSol = useCallback(() => {
@@ -44,9 +47,8 @@ export default function App() {
     setCountdown(30);
   }, [maxSol]);
 
-  // Countdown only runs AFTER the player clicks "Start Mission ->" and when Reduced Motion is OFF
   useEffect(() => {
-    if (!missionStarted || reducedMotion) return;
+    if (screen !== 'PLAYING' || reducedMotion) return;
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
@@ -57,7 +59,7 @@ export default function App() {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [missionStarted, reducedMotion, handleAdvanceSol]);
+  }, [screen, reducedMotion, handleAdvanceSol]);
 
   return (
     <main
@@ -65,7 +67,6 @@ export default function App() {
         reducedMotion ? 'reduced-motion' : ''
       }`}
     >
-      {/* Keep the 2D Lunar Base rendered behind the Welcome Screen for a cool animated backdrop */}
       <Parallax2D
         graphicsPreset={graphicsPreset}
         solarExtended={solarExtended}
@@ -74,19 +75,35 @@ export default function App() {
         commsQueued={commsQueued}
       />
 
-      {!missionStarted ? (
+      {screen === 'WELCOME' && (
         <WelcomeScreen
           selectedLevel={level}
           onSelectLevel={setLevel}
-          onStartMission={handleStartMission}
+          onStartMission={() => setScreen('BRIEFING')}
           reducedMotion={reducedMotion}
           onToggleReducedMotion={() => setReducedMotion((v) => !v)}
           graphicsPreset={graphicsPreset}
           onChangeGraphics={setGraphicsPreset}
         />
-      ) : (
+      )}
+
+      {screen === 'BRIEFING' && (
+        <BriefingScreen
+          selectedLevel={level}
+          selectedCharacter={selectedCharacter}
+          onSelectCharacter={setSelectedCharacter}
+          onBackToWelcome={() => setScreen('WELCOME')}
+          onStartGame={handleStartGame}
+        />
+      )}
+
+      {screen === 'PLAYING' && (
         <>
-          <SpriteActor activeStation={activeStation} reducedMotion={reducedMotion} />
+          <SpriteActor
+            activeStation={activeStation}
+            reducedMotion={reducedMotion}
+            character={selectedCharacter}
+          />
 
           <MissionHUD
             sol={sol}
