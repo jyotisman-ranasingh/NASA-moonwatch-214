@@ -1,5 +1,11 @@
 // src/ui/WelcomeScreen.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
+
+// Public-domain high-contrast 2D Moon & Space reference images
+const MOON_SPACE_BG =
+  'https://images-assets.nasa.gov/image/PIA00405/PIA00405~orig.jpg';
+const DEEP_SPACE_STARS =
+  'https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001955/GSFC_20171208_Archive_e001955~orig.jpg';
 
 const CAMPAIGN_LEVELS = [
   {
@@ -36,207 +42,6 @@ const CAMPAIGN_LEVELS = [
   },
 ];
 
-// Deterministic pseudo-random helper so stars and craters never flicker on re-render
-function seededRandom(seed) {
-  let s = seed % 2147483647;
-  if (s <= 0) s += 2147483646;
-  return () => {
-    s = (s * 16807) % 2147483647;
-    return (s - 1) / 2147483646;
-  };
-}
-
-function MoonSpaceBackdrop() {
-  const canvasRef = useRef(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-
-    const drawScene = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      const rand = seededRandom(2142026);
-
-      // 1. Deep Obsidian Space Background
-      const bgGrad = ctx.createRadialGradient(
-        width * 0.5,
-        height * 0.42,
-        20,
-        width * 0.5,
-        height * 0.42,
-        Math.max(width, height) * 0.85
-      );
-      bgGrad.addColorStop(0, '#0d1117');
-      bgGrad.addColorStop(0.45, '#05070a');
-      bgGrad.addColorStop(1, '#010203');
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, width, height);
-
-      // 2. Dense Multi-Layer Starfield (Matches reference starry sky)
-      const starCount = Math.floor((width * height) / 2400);
-      for (let i = 0; i < starCount; i++) {
-        const sx = rand() * width;
-        const sy = rand() * height;
-        const sizeRoll = rand();
-        const radius =
-          sizeRoll > 0.97 ? 1.55 : sizeRoll > 0.85 ? 1.05 : 0.6;
-        const alpha =
-          sizeRoll > 0.95
-            ? 0.92
-            : 0.25 + rand() * 0.55;
-
-        ctx.beginPath();
-        ctx.arc(sx, sy, radius, 0, Math.PI * 2);
-        ctx.fillStyle =
-          sizeRoll > 0.92
-            ? `rgba(226, 238, 255, ${alpha})`
-            : `rgba(255, 255, 255, ${alpha})`;
-        ctx.fill();
-      }
-
-      // Moon center & radius positioned cleanly in the upper-center viewport
-      const cx = width * 0.5;
-      const cy = height * 0.41;
-      const r = Math.min(width, height) * 0.21;
-
-      // 3. Soft Silver-White Atmospheric Halo Behind the Moon
-      const haloGrad = ctx.createRadialGradient(cx, cy, r * 0.88, cx, cy, r * 1.65);
-      haloGrad.addColorStop(0, 'rgba(225, 232, 240, 0.26)');
-      haloGrad.addColorStop(0.4, 'rgba(180, 192, 208, 0.09)');
-      haloGrad.addColorStop(1, 'rgba(5, 7, 10, 0)');
-      ctx.fillStyle = haloGrad;
-      ctx.beginPath();
-      ctx.arc(cx, cy, r * 1.65, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Clip to the Moon sphere
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.clip();
-
-      // 4. Base Lunar Regolith Sphere (Crisp silver-grey gradient)
-      const baseSphere = ctx.createRadialGradient(
-        cx - r * 0.15,
-        cy - r * 0.55,
-        r * 0.1,
-        cx,
-        cy,
-        r * 1.05
-      );
-      baseSphere.addColorStop(0, '#f8fafc');
-      baseSphere.addColorStop(0.45, '#cbd5e1');
-      baseSphere.addColorStop(0.85, '#94a3b8');
-      baseSphere.addColorStop(1, '#475569');
-      ctx.fillStyle = baseSphere;
-      ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
-
-      // 5. Lunar Maria (Dark Basalt Seas matching the reference texture)
-      const maria = [
-        { x: -0.26, y: -0.28, rx: 0.34, ry: 0.28, rot: -0.3, a: 0.26 }, // Mare Imbrium
-        { x: 0.12, y: -0.32, rx: 0.22, ry: 0.20, rot: 0.2, a: 0.24 },  // Mare Serenitatis
-        { x: 0.34, y: -0.15, rx: 0.26, ry: 0.22, rot: 0.4, a: 0.28 },  // Mare Tranquillitatis
-        { x: -0.45, y: 0.05, rx: 0.24, ry: 0.42, rot: -0.15, a: 0.32 }, // Oceanus Procellarum
-        { x: -0.05, y: 0.18, rx: 0.36, ry: 0.28, rot: 0.1, a: 0.30 },  // Mare Nubium
-        { x: 0.28, y: 0.34, rx: 0.32, ry: 0.24, rot: -0.2, a: 0.28 },  // Mare Nectaris
-      ];
-
-      maria.forEach((m) => {
-        ctx.save();
-        ctx.translate(cx + m.x * r, cy + m.y * r);
-        ctx.rotate(m.rot);
-        const mGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, Math.max(m.rx, m.ry) * r);
-        mGrad.addColorStop(0, `rgba(71, 85, 105, ${m.a})`);
-        mGrad.addColorStop(0.7, `rgba(51, 65, 85, ${m.a * 0.75})`);
-        mGrad.addColorStop(1, 'rgba(51, 65, 85, 0)');
-        ctx.fillStyle = mGrad;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, m.rx * r, m.ry * r, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      });
-
-      // 6. High-Detail Impact Craters (Concentrated along the bright highlands & terminator)
-      for (let i = 0; i < 165; i++) {
-        const angle = rand() * Math.PI * 2;
-        const dist = Math.sqrt(rand()) * r * 0.94;
-        const crX = cx + Math.cos(angle) * dist;
-        const crY = cy + Math.sin(angle) * dist;
-        const crR = (0.012 + Math.pow(rand(), 2.4) * 0.068) * r;
-
-        // Crater shadow rim (top-lit relief)
-        ctx.beginPath();
-        ctx.arc(crX, crY - crR * 0.14, crR, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(30, 41, 59, 0.34)';
-        ctx.fill();
-
-        // Crater sunlit lower rim
-        ctx.beginPath();
-        ctx.arc(crX, crY + crR * 0.14, crR * 0.92, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(248, 250, 252, 0.28)';
-        ctx.fill();
-
-        // Crater floor
-        ctx.beginPath();
-        ctx.arc(crX, crY, crR * 0.82, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(148, 163, 184, 0.32)';
-        ctx.fill();
-      }
-
-      // Prominent Tycho Crater near South Pole
-      const tychoX = cx - r * 0.08;
-      const tychoY = cy + r * 0.68;
-      ctx.beginPath();
-      ctx.arc(tychoX, tychoY, r * 0.075, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.55)';
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(tychoX, tychoY, r * 0.03, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(226, 232, 240, 0.45)';
-      ctx.fill();
-
-      // 7. Exact Half-Lit / Earthshine Terminator Shadow (Bright Top, Dim Earthlit Bottom)
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(0.08); // Slight natural tilt matching reference image
-      const terminatorGrad = ctx.createLinearGradient(0, -r * 0.25, 0, r * 0.32);
-      terminatorGrad.addColorStop(0, 'rgba(4, 6, 12, 0)');
-      terminatorGrad.addColorStop(0.32, 'rgba(4, 6, 12, 0.48)');
-      terminatorGrad.addColorStop(0.55, 'rgba(4, 6, 12, 0.80)');
-      terminatorGrad.addColorStop(1, 'rgba(3, 5, 10, 0.84)');
-      ctx.fillStyle = terminatorGrad;
-      ctx.fillRect(-r * 1.2, -r * 0.3, r * 2.4, r * 1.6);
-      ctx.restore();
-
-      // 8. Subtle Rim Shadow & Top-Edge Silver Crescent Rim Light
-      const limbShadow = ctx.createRadialGradient(cx, cy - r * 0.08, r * 0.72, cx, cy, r);
-      limbShadow.addColorStop(0, 'rgba(0, 0, 0, 0)');
-      limbShadow.addColorStop(1, 'rgba(2, 4, 8, 0.52)');
-      ctx.fillStyle = limbShadow;
-      ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
-
-      ctx.restore();
-    };
-
-    drawScene();
-    window.addEventListener('resize', drawScene);
-    return () => window.removeEventListener('resize', drawScene);
-  }, []);
-
-  return (
-    <div className="astracon-space-bg" aria-hidden="true">
-      <canvas ref={canvasRef} className="astracon-moon-canvas" />
-    </div>
-  );
-}
-
 export default function WelcomeScreen({
   selectedLevel = 1,
   onSelectLevel,
@@ -250,18 +55,47 @@ export default function WelcomeScreen({
 
   return (
     <section className="astracon-root">
-      {/* EXACT 2D HALF-LIT MOON & DEEP SPACE STARFIELD BACKGROUND */}
-      <MoonSpaceBackdrop />
+      {/* 2D SPACE & GLOWING MOON BACKGROUND (Replaces the Black Hole) */}
+      <div className="astracon-space-bg">
+        <div
+          className="astracon-stars-layer"
+          style={{ backgroundImage: `url(${DEEP_SPACE_STARS})` }}
+        />
+
+        {/* 2D Moon with warm amber/copper atmospheric horizon glow */}
+        <div className="astracon-moon-wrapper">
+          <div className="astracon-moon-halo" />
+          <div className="astracon-horizon-beam" />
+          <img
+            src={MOON_SPACE_BG}
+            alt="2D Lunar Surface"
+            className="astracon-moon-img"
+          />
+        </div>
+
+        {/* Exact Dot-Matrix LED Halftone Grid Overlay from Astracon */}
+        <div className="astracon-dot-matrix" />
+      </div>
 
       {/* FOREGROUND UI LAYER */}
       <div className="astracon-ui-container">
-        {/* TOP ROW — YELLOW ZONE: "MOONWATCH NASA" Logo Badge */}
+        {/* TOP ROW — YELLOW ZONE: "MOONWATCH NASA" Logo Badge (Red top-right nav removed) */}
         <header className="astracon-top-bar">
           <div className="astracon-brand-lockup">
             <div className="astracon-logo-box" aria-hidden="true">
               <svg width="26" height="26" viewBox="0 0 32 32">
                 <circle cx="16" cy="16" r="9" fill="#050505" />
-                <path d="M 7,16 A 9,9 0 0,0 25,16 Z" fill="#64748b" />
+                <ellipse
+                  cx="16"
+                  cy="16"
+                  rx="14"
+                  ry="5"
+                  fill="none"
+                  stroke="#050505"
+                  strokeWidth="2.5"
+                  transform="rotate(-24 16 16)"
+                />
+                <circle cx="13" cy="13" r="2" fill="#ffffff" />
               </svg>
             </div>
             <div className="astracon-brand-text">
@@ -271,7 +105,7 @@ export default function WelcomeScreen({
           </div>
         </header>
 
-        {/* GREEN ZONE: Tagline + Giant Pixel Title */}
+        {/* GREEN ZONE: Tagline + Pixelated Copper Title ("MOONWATCH" without Sol 214) */}
         <div className="astracon-hero-block">
           <p className="astracon-green-tagline">
             KEEP YOUR CREW ALIVE. REAL NASA FLARES. YOUR CALL.
@@ -279,7 +113,7 @@ export default function WelcomeScreen({
           <h1 className="astracon-pixel-title">MOONWATCH</h1>
         </div>
 
-        {/* BLUE ZONE: Level 1, Level 2 & Level 3 Content Tables */}
+        {/* BLUE ZONE: Level 1, Level 2 & Level 3 Content Tables (Middle red-circled text removed) */}
         <div className="astracon-blue-zone">
           <div className="astracon-zone-meta">
             <span>SELECT MISSION CAMPAIGN LEVEL</span>
@@ -303,6 +137,7 @@ export default function WelcomeScreen({
                     <span className="astracon-sols-pill">{lvl.sols}</span>
                   </div>
 
+                  {/* Only the clean feature pill tags from Picture 1 */}
                   <div className="astracon-tags-table">
                     {lvl.tags.map((tag) => (
                       <span key={tag} className="astracon-tag-chip">
@@ -318,6 +153,7 @@ export default function WelcomeScreen({
 
         {/* BOTTOM BAR — PURPLE ZONE (Settings & Tutorial) + RIGHT CTA (Start Mission) */}
         <footer className="astracon-bottom-bar">
+          {/* Purple Zone: Settings & Tutorial in exact Astracon button style */}
           <div className="astracon-purple-actions">
             <button
               type="button"
@@ -337,6 +173,7 @@ export default function WelcomeScreen({
             </button>
           </div>
 
+          {/* Bottom-Right Slot: Start Mission Button */}
           <button
             type="button"
             className="astracon-btn-start"
